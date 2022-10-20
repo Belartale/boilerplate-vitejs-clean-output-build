@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import glob from 'glob';
 import path from 'path';
 import handlebars from 'vite-plugin-handlebars';
-// let helpers = require('handlebars-helpers')();
+import FullReload from 'vite-plugin-full-reload';
 import removeComments from './customPlugins/removeComments';
 
 const getPathsScssFiles = (extname: string) => {
@@ -30,8 +30,10 @@ export default defineConfig({
             partialDirectory: path.resolve(__dirname, 'src'),
             reloadOnPartialChange: true,
         }) as any,
+        FullReload([path.resolve(__dirname, 'src/**/*')]),
         removeComments(),
     ],
+    assetsInclude: [path.resolve(__dirname, 'src')],
     build: {
         minify: false,
         polyfillModulePreload: false,
@@ -54,7 +56,10 @@ export default defineConfig({
                     return name;
                 },
                 assetFileNames: ({ name }) => {
-                    console.log('name', name);
+                    console.log('name', name?.split('/').at(-2));
+
+                    const folder = name?.split('/').at(-2);
+
                     if (/\.(gif|jpe?g|png|svg)$/.test(name ?? '')) {
                         return 'assets/[name][extname]';
                     }
@@ -64,7 +69,10 @@ export default defineConfig({
                     }
 
                     if (/\.(css|sass|scss|less)$/.test(name ?? '')) {
-                        return 'css/[name].[hash][extname]';
+                        return `css${
+                            folder === 'src' ? '' : `/${folder}`
+                        }/[name].[hash][extname]`;
+                        // return 'css/[name].[hash][extname]';
                     }
                     if (/\.(js|ts)$/.test(name ?? '')) {
                         return 'js/[name].[hash][extname]';
